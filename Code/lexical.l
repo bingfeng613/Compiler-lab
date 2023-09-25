@@ -29,6 +29,9 @@ ID          {letter}+({digit}|{letter})*
 RELOP       ">"|"<"|">="|"<="|"=="|"!="
 TYPE        "int"|"float"
 SPACE       [ \t\r]+
+OCT_ILLEGAL 0[0-7]*[89]+[0-9]* 
+HEX_ILLEGAL 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* 
+
 %%
 "\n"        { yycolumn = 1; }
 {SPACE}     { }
@@ -101,7 +104,13 @@ SPACE       [ \t\r]+
 {ID}        { yylval = createNode("ID", ENUM_LEX_ID, yylineno, 0, NULL);
               strcpy(yylval->strVal, yytext);
               return ID; }
-.           { printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext); 
+
+{HEX_ILLEGAL} {printf("Error type A at Line %d: Illegal hexadecimal number \'%s\'.\n", yylineno, yytext); 
+                lexError++;}
+{OCT_ILLEGAL} {printf("Error type A at Line %d: Illegal octal number \'%s\'.\n", yylineno, yytext); 
+                lexError++;}
+                
+.           { printf("Error type A at Line %d: Mysterious characters \'%s\'.\n", yylineno, yytext); 
               lexError++; }
 %%
 int charToi(char ch)
