@@ -139,7 +139,7 @@ Stmt : Exp SEMI                                 { $$ = createNode("Stmt", ENUM_S
     | IF LP error RP Stmt %prec LOWER_THAN_ELSE { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | IF LP Exp RP error ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Missing \";\"."); yyerrok; }
     | IF LP error RP ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | error LP Exp RP Stmt                      { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
@@ -226,7 +226,7 @@ Exp : Exp ASSIGNOP Exp                          { $$ = createNode("Exp", ENUM_SY
     | ID LP error RP                            { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | Exp LB error RB                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Missing \"]\".");  yyerrok; }
     ;
 Args : Exp COMMA Args                           { $$ = createNode("Args", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
