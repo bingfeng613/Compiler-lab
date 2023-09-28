@@ -10,8 +10,22 @@
     int synError = 0;
 %}
 
+// tokens
+
 %token INT FLOAT ID SEMI COMMA ASSIGNOP RELOP 
 %token PLUS MINUS STAR DIV AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
+%token ERROR_TOKEN_ANNOTATION
+
+// non-terminals
+
+%type Program ExtDefList ExtDef ExtDecList   //  High-level Definitions
+%type Specifier StructSpecifier OptTag Tag   //  Specifiers
+%type VarDec FunDec VarList ParamDec         //  Declarators
+%type CompSt StmtList Stmt                   //  Statements
+%type DefList Def Dec DecList                //  Local Definitions
+%type Exp Args                               //  Expressions
+
+// precedence and associativity
 
 %right ASSIGNOP
 %left OR
@@ -34,7 +48,7 @@ Program : ExtDefList                            { $$ = createNode("Program", ENU
 ExtDefList : ExtDef ExtDefList                  { $$ = createNode("ExtDefList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 2, package(2, $1, $2)); }
     | /* empty */                               { $$ = createNode("ExtDefList", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL);}
+                                                  , 0, NULL);}                                              
     ;
 ExtDef : Specifier ExtDecList SEMI              { $$ = createNode("ExtDef", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
@@ -46,15 +60,15 @@ ExtDef : Specifier ExtDecList SEMI              { $$ = createNode("ExtDef", ENUM
                                                   , 0, NULL); yyerrok; }
     | error SEMI                                { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
-    | Specifier error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+/*    | Specifier error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerrok; }  */
     ;
 ExtDecList : VarDec                             { $$ = createNode("ExtDecList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 1, package(1, $1)); }
     | VarDec COMMA ExtDecList                   { $$ = createNode("ExtDecList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
-    | VarDec error COMMA ExtDecList             { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+/*    | VarDec error COMMA ExtDecList             { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerrok; } */
     ;
 
 /* Specifiers */
@@ -74,7 +88,7 @@ StructSpecifier : STRUCT OptTag LC DefList RC   { $$ = createNode("StructSpecifi
     | STRUCT OptTag LC error                    { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | STRUCT error                              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Invalid variable declaration."); yyerrok; }                                                
     ;
 OptTag : ID                                     { $$ = createNode("OptTag", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 1, package(1, $1)); }
@@ -94,6 +108,8 @@ VarDec : ID                                     { $$ = createNode("VarDec", ENUM
                                                   , 0, NULL); yyerrok; }
     | VarDec LB error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
+    | error RB                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     ;
 FunDec : ID LP VarList RP                       { $$ = createNode("FunDec", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 4, package(4, $1, $2, $3, $4)); }
@@ -103,6 +119,8 @@ FunDec : ID LP VarList RP                       { $$ = createNode("FunDec", ENUM
                                                   , 0, NULL); yyerrok; }
     | ID LP error                               { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
+    | error RP                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     ;
 VarList : ParamDec COMMA VarList                { $$ = createNode("VarList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
@@ -116,6 +134,10 @@ ParamDec : Specifier VarDec                     { $$ = createNode("ParamDec", EN
 /* Statements */
 CompSt : LC DefList StmtList RC                 { $$ = createNode("CompSt", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 4, package(4, $1, $2, $3, $4)); }
+    | error RC                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerrok; }
+    | error RB                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerrok; }                                                
     ;
 StmtList : Stmt StmtList                        { $$ = createNode("StmtList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 2, package(2, $1, $2)); }
@@ -140,10 +162,12 @@ Stmt : Exp SEMI                                 { $$ = createNode("Stmt", ENUM_S
                                                   , 0, NULL); yyerrok; }
     | IF LP Exp RP error ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerror("Missing \";\"."); yyerrok; }
-    | IF LP error RP ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+    | IF LP error RP ELSE Stmt                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | error LP Exp RP Stmt                      { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
+    | ERROR_TOKEN_ANNOTATION                    { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerror("Incomplet annotation."); yyerrok; }    
     ;
 
 /* Local Definitions */
@@ -226,7 +250,7 @@ Exp : Exp ASSIGNOP Exp                          { $$ = createNode("Exp", ENUM_SY
     | ID LP error RP                            { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | Exp LB error RB                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerror("Missing \"]\".");  yyerrok; }
+                                                  , 0, NULL); yyerror("Missing \"]\".");  yyerrok; } 
     ;
 Args : Exp COMMA Args                           { $$ = createNode("Args", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
