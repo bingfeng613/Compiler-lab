@@ -43,7 +43,7 @@ HEX_ILLEGAL 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]*
               char b = input();
               while (!(a == '*' && b == '/') && b != 0) 
               { a = b; b = input();} 
-              if(b == EOF) { return ERROR_TOKEN_ANNOTATION; } }
+              if(b == 0) {return ERROR_TOKEN_ANNOTATION; } }
 
 ";"         { yylval = createNode("SEMI", ENUM_LEX_OTHER, yylineno, 0, NULL);
               return SEMI; }
