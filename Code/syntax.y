@@ -57,7 +57,7 @@ ExtDef : Specifier ExtDecList SEMI              { $$ = createNode("ExtDef", ENUM
     | Specifier FunDec CompSt                   { $$ = createNode("ExtDef", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
     | Specifier error SEMI                      { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Invalid variable declaration."); yyerrok; }
     | error SEMI                                { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
 /*    | Specifier error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
@@ -157,7 +157,7 @@ Stmt : Exp SEMI                                 { $$ = createNode("Stmt", ENUM_S
     | WHILE LP Exp RP Stmt                      { $$ = createNode("Stmt", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 5, package(5, $1, $2, $3, $4, $5)); }
     | error SEMI                                { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Miss \")\"."); yyerrok; }
     | IF LP error RP Stmt %prec LOWER_THAN_ELSE { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | IF LP Exp RP error ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
@@ -242,12 +242,12 @@ Exp : Exp ASSIGNOP Exp                          { $$ = createNode("Exp", ENUM_SY
     | Exp PLUS error                            { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | Exp MINUS error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     | Exp STAR error                            { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }
+                                                  , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     | Exp DIV error                             { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
-    | ID LP error RP                            { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+    | WHILE LP error RP                         { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | Exp LB error RB                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerror("Missing \"]\".");  yyerrok; } 
