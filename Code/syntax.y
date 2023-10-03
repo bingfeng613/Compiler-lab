@@ -14,7 +14,7 @@
 
 %token INT FLOAT ID SEMI COMMA ASSIGNOP RELOP 
 %token PLUS MINUS STAR DIV AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
-%token ERROR_TOKEN_ANNOTATION
+%token MISSING_ANNOTATION_RIGHT
 
 // non-terminals
 
@@ -60,8 +60,8 @@ ExtDef : Specifier ExtDecList SEMI              { $$ = createNode("ExtDef", ENUM
                                                   , 0, NULL); yyerror("Invalid variable declaration."); yyerrok; }
     | error SEMI                                { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
-/*    | Specifier error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerrok; }  */
+    | Specifier error                           { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+                                                  , 0, NULL); yyerrok; }  
     ;
 ExtDecList : VarDec                             { $$ = createNode("ExtDecList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 1, package(1, $1)); }
@@ -100,6 +100,7 @@ Tag : ID                                        { $$ = createNode("Tag", ENUM_SY
     ;
 
 /* Declarators */
+// 对一个变量的定义
 VarDec : ID                                     { $$ = createNode("VarDec", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 1, package(1, $1)); }
     | VarDec LB INT RB                          { $$ = createNode("VarDec", ENUM_SYN_NOT_NULL, @$.first_line
@@ -111,6 +112,7 @@ VarDec : ID                                     { $$ = createNode("VarDec", ENUM
     | error RB                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     ;
+// 对一个函数头的定义
 FunDec : ID LP VarList RP                       { $$ = createNode("FunDec", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 4, package(4, $1, $2, $3, $4)); }
     | ID LP RP                                  { $$ = createNode("FunDec", ENUM_SYN_NOT_NULL, @$.first_line
@@ -122,6 +124,7 @@ FunDec : ID LP VarList RP                       { $$ = createNode("FunDec", ENUM
     | error RP                                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerror("Invalid expression."); yyerrok; }
     ;
+// 形参列表
 VarList : ParamDec COMMA VarList                { $$ = createNode("VarList", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
     | ParamDec                                  { $$ = createNode("VarList", ENUM_SYN_NOT_NULL, @$.first_line
@@ -157,7 +160,7 @@ Stmt : Exp SEMI                                 { $$ = createNode("Stmt", ENUM_S
     | WHILE LP Exp RP Stmt                      { $$ = createNode("Stmt", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 5, package(5, $1, $2, $3, $4, $5)); }
     | error SEMI                                { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
-                                                  , 0, NULL); yyerror("Miss \")\"."); yyerrok; }
+                                                  , 0, NULL); yyerrok; }
     | IF LP error RP Stmt %prec LOWER_THAN_ELSE { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
     | IF LP Exp RP error ELSE Stmt              { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
@@ -166,7 +169,7 @@ Stmt : Exp SEMI                                 { $$ = createNode("Stmt", ENUM_S
                                                   , 0, NULL); yyerrok; }
     | error LP Exp RP Stmt                      { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerrok; }
-    | ERROR_TOKEN_ANNOTATION                    { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
+    | MISSING_ANNOTATION_RIGHT                  { $$ = createNode("Error", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); yyerror("Incomplet annotation."); yyerrok; }    
     ;
 
@@ -176,6 +179,7 @@ DefList : Def DefList                           { $$ = createNode("DefList", ENU
     | /* empty */                               { $$ = createNode("Stmt", ENUM_SYN_NULL, @$.first_line
                                                   , 0, NULL); }
     ;
+// 局部变量定义
 Def : Specifier DecList SEMI                    { $$ = createNode("Def", ENUM_SYN_NOT_NULL, @$.first_line
                                                   , 3, package(3, $1, $2, $3)); }
     ;

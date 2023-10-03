@@ -38,12 +38,14 @@ HEX_ILLEGAL 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]*
 {SPACE}     { }
 
 "//"        { char c = input(); 
-              while (c != '\n') c = input(); }              
+              while (c != '\n') c = input(); } 
+
+
 "/*"        { char a = input();
               char b = input();
               while (!(a == '*' && b == '/') && b != 0) 
-              { a = b; b = input();} 
-              if(b == 0) {return ERROR_TOKEN_ANNOTATION; } }
+              { a = b; b = input();}
+              if(b == 0) {return MISSING_ANNOTATION_RIGHT; } }
 
 ";"         { yylval = createNode("SEMI", ENUM_LEX_OTHER, yylineno, 0, NULL);
               return SEMI; }
