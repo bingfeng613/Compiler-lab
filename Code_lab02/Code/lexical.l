@@ -29,24 +29,14 @@ ID          {letter}+({digit}|{letter})*
 RELOP       ">"|"<"|">="|"<="|"=="|"!="
 TYPE        "int"|"float"
 SPACE       [ \t\r]+
-OCT_ILLEGAL 0[0-7]*[89]+[0-9]* 
-HEX_ILLEGAL 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]* 
-
-
 %%
 "\n"        { yycolumn = 1; }
 {SPACE}     { }
-
 "//"        { char c = input(); 
-              while (c != '\n') c = input(); } 
-
-
+              while (c != '\n') c = input(); }
 "/*"        { char a = input();
               char b = input();
-              while (!(a == '*' && b == '/') && b != 0) 
-              { a = b; b = input();}
-              if(b == 0) {return MISSING_ANNOTATION_RIGHT; } }
-
+              while (!(a == '*' && b == '/')) { a = b; b = input(); } }
 ";"         { yylval = createNode("SEMI", ENUM_LEX_OTHER, yylineno, 0, NULL);
               return SEMI; }
 ","         { yylval = createNode("COMMA", ENUM_LEX_OTHER, yylineno, 0, NULL);
@@ -111,16 +101,8 @@ HEX_ILLEGAL 0[xX][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]*
 {ID}        { yylval = createNode("ID", ENUM_LEX_ID, yylineno, 0, NULL);
               strcpy(yylval->strVal, yytext);
               return ID; }
-
-{HEX_ILLEGAL}               {printf("Error type A at Line %d: Illegal hexadecimal number \'%s\'.\n", yylineno, yytext); lexError++;}
-{OCT_ILLEGAL}               {printf("Error type A at Line %d: Illegal octal number \'%s\'.\n", yylineno, yytext); lexError++;}
-{digit}*"."{digit}+[eE]     {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-"."{digit}+                 {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-{digit}+"."                 {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-{digit}+"."{digit}*[eE]     {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-{digit}+[eE][+-]?{digit}*   {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-"."[eE][+-]?{digit}+        {printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", yylineno, yytext); lexError++;}
-.           { printf("Error type A at Line %d: Mysterious characters \'%s\'.\n", yylineno, yytext); lexError++; }
+.           { printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext); 
+              lexError++; }
 %%
 int charToi(char ch)
 {   // 如果是数字，则用数字的ASCII码减去48, 如果ch = '2' ,则 '2' - 48 = 2
