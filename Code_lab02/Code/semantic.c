@@ -1,15 +1,15 @@
 #include "semantic.h"
 
 // 用散列表实现符号表
-Entry symbolTable[HASH_SIZE];
-Entry layersHead;
+Entry symbolTable[HASH_SIZE]; // HASH_SIZE = 1024
+Entry layersHead; // 另一维度的链表指针
 
 // 初始化符号表
 void initSymbolTable() {
     for (int i = 0; i < HASH_SIZE; i++) {
         // 散列表的每个槽位都初始化为空指针
         symbolTable[i] = NULL;
-    }
+    } // 采用open hashing的方式
     // 初始化层次链表头节点
     layersHead = (Entry)malloc(sizeof(Entry_));
     layersHead->hashNext = NULL;
@@ -21,7 +21,7 @@ void initSymbolTable() {
     layersHead->hashNext = globalLayer;
 }
 
-// 散列函数
+// 散列函数PJW
 unsigned int hash_pjw(char* name) {
     unsigned int val = 0, i;
     for (; *name; ++name) {
@@ -186,23 +186,28 @@ int typeEqual(Type a, Type b) {
         return 0;
 }
 
+
 // 以下开始使用语法分析树进行语义解析
 void semantic_analyse(Node* root) {
     initSymbolTable();
     Program(root);
+    // 检查是否存在已经声明但是未实现的函数
     check(); //check for functions with declaration but no implementations.
 }
-
+ // 递归地处理扩展定义列表（例如全局变量和函数声明/定义）
 void Program(Node* root) {
     ExtDefList(root->children[0]);
 }
 
+// 检查符号表中的每个条目
+// 如果一个函数被声明但没有定义，就打印一个错误消息
 void check() {
     for (int i = 0; i < HASH_SIZE; i++) {
         if (symbolTable[i] != NULL) {
             Entry entry = symbolTable[i];
             while (entry != NULL) {
                 if (entry->type->kind == ENUM_FUNC && entry->type->func->hasDefined == 0) {
+                    // 函数声明后没有定义的错误信息
                     printf("Error type 18 at line %d: Undefined function \"%s\".\n", entry->type->func->lineno, 
                     entry->name);
                 }
@@ -212,6 +217,7 @@ void check() {
     }
 }
 
+// 递归处理每个扩展定义
 void ExtDefList(Node* root) {
     if (root->childNum != 0) {
         ExtDef(root->children[0]);
@@ -219,6 +225,7 @@ void ExtDefList(Node* root) {
     }
 }
 
+// 处理单个扩展定义
 void ExtDef(Node* root) {
     Type type = Specifier(root->children[0]);
     // 类型错误（结构体重复定义）
@@ -234,7 +241,7 @@ void ExtDef(Node* root) {
         res->type->kind = ENUM_STRUCT_DEF;
         insertSymbol(res);
     }
-    // 全局变量定义
+    // 全局变量定义 处理变量列表
     if (strcmp(root->children[1]->name, "ExtDecList") == 0) {
         ExtDecList(root->children[1], type);
     }
@@ -251,18 +258,19 @@ void ExtDef(Node* root) {
         if (sym != NULL) {
             // 是函数定义
             if (sym->type->func->hasDefined == 1) {
-                // 重复定义
+                // 重复的函数定义
                 if (strcmp(root->children[2]->name, "CompSt") == 0)
                     printf("Error type 4 at line %d: Redefined function \"%s\".\n", root->lineno, sym->name);
-                // 声明和定义冲突
+                // 声明和定义冲突 // 后面是函数声明 
                 else if (strcmp(root->children[2]->name, "SEMI") == 0 && !typeEqual(newType, sym->type))
                     printf("Error type 19 at line %d: Inconsistent declaration of function \"%s\".\n", root->lineno, sym->name);
                 return;
             }
             // 是函数声明
             if (sym->type->func->hasDefined == 0) {
+                // 后面是函数定义
                 if (strcmp(root->children[2]->name, "CompSt") == 0) {
-                    // 定义和声明冲突
+                    // 定义和声明冲突  类型不匹配
                     if (!typeEqual(newType, sym->type)) {
                         printf("Error type 19 at line %d: Inconsistent declaration of function \"%s\".\n", root->lineno, sym->name);
                         return;
@@ -273,7 +281,7 @@ void ExtDef(Node* root) {
                         return;
                     }
                 }
-                else {
+                else { // 后面是函数声明
                     // 声明和声明冲突
                     if (!typeEqual(newType, sym->type))
                         printf("Error type 19 at line %d: Inconsistent declaration of function \"%s\".\n", root->lineno, sym->name);
@@ -321,20 +329,23 @@ Type Specifier(Node* root) {
 
 // 全局变量名称列表
 void ExtDecList(Node* root, Type type) {
-    if (root->childNum == 1)
+    if (root->childNum == 1) // 只有一个子节点 直接进行处理
         VarDec(root->children[0], type, ENUM_VAR);
     else {
         VarDec(root->children[0], type, ENUM_VAR);
+        // 递归处理剩下的子节点
         ExtDecList(root->children[2], type);
     }
 }
 
 // 函数名和参数列表（不检查错误）
 Function FunDec(Node* root) {
+    // 构造一个新的函数描述符
     Function res = (Function)malloc(sizeof(Function_));
     strcpy(res->name, root->children[0]->strVal);
     res->parmNum = 0;
     res->lineno = root->lineno;
+    // 解析函数名称和参数列表 并将其存储在函数描述符中
     if (root->childNum == 3)
         res->head = NULL;
     else {
@@ -347,9 +358,10 @@ Function FunDec(Node* root) {
             tmp = tmp->next;
         }
     }
+    // 返回函数描述符
     return res;
 }
-
+// 处理复合语句 通常是函数体
 void CompSt(Node* root, char* funcName, Type reType) {
     // 先把函数参数存进符号表
     Type type = reType;
@@ -365,12 +377,15 @@ void CompSt(Node* root, char* funcName, Type reType) {
         }
         type = sym->type->func->returnType;
     }
+    // 处理函数体内的定义列表和语句列表
     DefList(root->children[1], ENUM_VAR);
     StmtList(root->children[2], type);
     return;
 }
 
+// 处理结构体描述符
 Type StructSpecifier(Node* root) {
+    // 构造一个新的结构体描述符
     Type res = (Type)malloc(sizeof(Type_));
     res->kind = ENUM_STRUCT;
     res->structure = (Structure)malloc(sizeof(Structure_));
@@ -401,6 +416,7 @@ Type StructSpecifier(Node* root) {
             res->structure = sym->type->structure;
             return res;
         }
+        // 定义新的结构体类型 处理结构体内的定义列表
         else if (strcmp(child->name, "DefList") == 0) {
             pushLayer();
             res->structure->head = DefList(child, ENUM_FIELD);
@@ -412,10 +428,13 @@ Type StructSpecifier(Node* root) {
 
 // 变量定义
 FieldList DefList(Node* root, IdType class) {
+    // 没有子节点 返回NULL
     if (root->childNum == 0)
         return NULL;
     else {
+        // 解析第一个子节点
         FieldList res = Def(root->children[0], class);
+        // 递归地处理剩余的子节点
         if (res == NULL)
             res = DefList(root->children[1], class);
         else {
@@ -427,13 +446,14 @@ FieldList DefList(Node* root, IdType class) {
         return res;
     }
 }
-
+// 解析单个变量或字段定义
 FieldList Def(Node* root, IdType class) {
     Type type = Specifier(root->children[0]);
     FieldList res = DecList(root->children[1], type, class);
     return res;
 }
 
+// 解析变量或字段声明的列表
 FieldList DecList(Node* root, Type type, IdType class) {
     FieldList res = Dec(root->children[0], type, class);
     if (root->childNum == 3) {
@@ -448,6 +468,7 @@ FieldList DecList(Node* root, Type type, IdType class) {
     return res;
 }
 
+// 解析一个变量或字段的声明
 FieldList Dec(Node* root, Type type, IdType class) {
     FieldList res = VarDec(root->children[0], type, class);
     // 错误：在定义结构体时对域进行初始化
@@ -455,6 +476,7 @@ FieldList Dec(Node* root, Type type, IdType class) {
         printf("Error type 15 at line %d: Initialized field \"%s\".\n", root->lineno, res->name);
         return NULL;
     }
+    // 对于变量，如果进行了初始化，检查类型匹配
     if (class == ENUM_VAR && res != NULL && root->childNum == 3) {
         Type right = Exp(root->children[2]);
         if (right != NULL && !typeEqual(right, type)) {
@@ -465,7 +487,9 @@ FieldList Dec(Node* root, Type type, IdType class) {
     return res;
 }
 
+// 解析变量或字段的具体定义
 FieldList VarDec(Node* root, Type type, IdType class) {
+    // 对于简单变量，直接查找其名称是否已在当前作用域或全局作用域中定义
     if (root->childNum == 1) {
         Entry sym = findSymbolLayer(root->children[0]->strVal);
         Entry symA = findSymbolAll(root->children[0]->strVal);
@@ -487,6 +511,7 @@ FieldList VarDec(Node* root, Type type, IdType class) {
         insertSymbol(tmp); 
         return res;
     }
+    // 对于数组类型，解析数组大小并递归地处理元素类型
     // 数组
     else {
         Type newType = (Type)malloc(sizeof(Type_));
@@ -498,6 +523,7 @@ FieldList VarDec(Node* root, Type type, IdType class) {
 }
 
 // 参数列表
+// 首先解析第一个参数，然后递归地处理剩余的参数
 FieldList VarList(Node* root) {
     FieldList res = ParamDec(root->children[0]);
     if (root->childNum == 3) {
@@ -507,11 +533,13 @@ FieldList VarList(Node* root) {
 }
 
 // 函数参数
+// 解析单个函数参数
 FieldList ParamDec(Node* root) {
     Type type = Specifier(root->children[0]);
     return VarDec(root->children[1], type, ENUM_FIELD);
 }
 
+// 
 // 语句列表
 void StmtList(Node* root, Type reType) {
     if (root->childNum == 2) {
@@ -521,6 +549,7 @@ void StmtList(Node* root, Type reType) {
     return;
 }
 
+// 进行个别语句的处理
 void Stmt(Node* root, Type reType) {
     if (strcmp(root->children[0]->name, "RETURN") == 0) {
         Type type = Exp(root->children[1]);
@@ -548,6 +577,7 @@ void Stmt(Node* root, Type reType) {
     return;
 }
 
+// 分析表达式
 Type Exp(Node* root) {
     if (strcmp(root->children[0]->name, "Exp") == 0) {
         // 对结构体使用.操作符
@@ -580,14 +610,15 @@ Type Exp(Node* root) {
             return res;
         }
         // 数组取地址操作
-        else if (strcmp(root->children[1]->name, "LB") == 0) {
-            Type pre = Exp(root->children[0]);
+        else if (strcmp(root->children[1]->name, "LB") == 0) { // children[1]如果是[
+            Type pre = Exp(root->children[0]); // [ 前的内容
             if (pre != NULL) {
-                if (pre->kind != ENUM_ARRAY) {
+                // 数组[]前面的类型不正确
+                if (pre->kind != ENUM_ARRAY) { 
                     printf("Error type 10 at line %d: Expect an array before [...].\n", root->lineno);
                     return NULL;
                 }
-                Type index = Exp(root->children[2]);
+                Type index = Exp(root->children[2]); // ]后的内容
                 if (index == NULL || index->kind != ENUM_BASIC || index->basic != INT_TYPE) {
                     printf("Error type 12 at line %d: Expect an integer in [...].\n", root->lineno);
 				    return NULL;
@@ -746,6 +777,7 @@ FieldList Args(Node* root) {
         res->next = Args(root->children[2]);
     return res;
 }
+
 
 // 打印参数类型列表
 void printArgs(FieldList head) {

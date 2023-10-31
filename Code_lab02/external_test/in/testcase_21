@@ -1,0 +1,20 @@
+struct MyStruct
+{
+	float real, image;
+};
+
+float getImage(struct MyStruct c1);
+
+float getReal(struct MyStruct c2);
+
+int getImage(struct MyStruct c1);
+
+float getReal(struct MyStruct c2, float k)
+{
+	k = k + c2.real;
+	return k;
+}
+
+int main()
+{
+}

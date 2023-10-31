@@ -1,0 +1,5 @@
+Error type 18 at Line 6: Undefined function "getImage".
+Error type 19 at Line 10: Inconsistent declaration of function "getImage".
+Error type 19 at Line 12: Inconsistent declaration of function "getReal".
+
+

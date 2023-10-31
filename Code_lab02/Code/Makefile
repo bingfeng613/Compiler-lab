@@ -66,6 +66,9 @@ test:
 	./parser ../Test/test_o4.cmm
 	./parser ../Test/test_o5.cmm
 	./parser ../Test/test_o6.cmm
+	./parser ../external_test/in/testcase_1
+	./parser ../external_test/in/testcase_11
+	./parser ../external_test/in/testcase_21
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
