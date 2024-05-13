@@ -1,0 +1,16 @@
+FUNCTION add :
+PARAM vtemp
+t8 := vtemp + #4
+t2 := *vtemp + *t8
+RETURN t2
+FUNCTION main :
+DEC vop 8
+t10 := &vop + #0
+*t10 := #1
+t13 := &vop + #4
+*t13 := #2
+ARG &vop
+t15 := CALL add
+vn := t15
+WRITE vn
+RETURN #0

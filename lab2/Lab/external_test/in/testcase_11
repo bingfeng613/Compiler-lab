@@ -1,0 +1,14 @@
+int abs(int x, int y)
+{
+	x(5);
+	if (x>y) 
+		return x;
+	else 
+		return y;
+}
+
+int main()
+{
+	int i;
+	i = abs(3, 5);
+}

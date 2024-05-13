@@ -1,0 +1,87 @@
+FUNCTION func1 :
+PARAM va
+vidx := #0
+vlen := #2
+vm := #0
+LABEL label1 :
+IF vidx < vlen GOTO label2
+GOTO label3
+LABEL label2 :
+t10 := vidx * #4
+t11 := va + t10
+IF *t11 > vm GOTO label4
+GOTO label5
+LABEL label4 :
+t15 := vidx * #4
+t16 := va + t15
+vm := *t16
+LABEL label5 :
+t17 := vidx + #1
+vidx := t17
+GOTO label1
+LABEL label3 :
+RETURN vm
+FUNCTION func2 :
+PARAM vp1
+PARAM vp2
+t21 := vp1 / vp2
+vt1 := t21
+t24 := vt1 * vp2
+vt2 := t24
+t27 := vp1 - vt2
+vt3 := t27
+RETURN vt3
+FUNCTION main :
+varr_len := #2
+DEC varr 16
+DEC vsum_arr 8
+vidx1 := #0
+vidx2 := #0
+LABEL label6 :
+IF vidx1 < varr_len GOTO label7
+GOTO label8
+LABEL label7 :
+vidx2 := #0
+LABEL label9 :
+IF vidx2 < varr_len GOTO label10
+GOTO label11
+LABEL label10 :
+t44 := vidx1 * #8
+t39 := &varr + t44
+t41 := vidx2 * #4
+t45 := t39 + t41
+t47 := vidx1 + vidx2
+ARG varr_len
+ARG t47
+t46 := CALL func2
+*t45 := t46
+t51 := vidx2 + #1
+vidx2 := t51
+GOTO label9
+LABEL label11 :
+t56 := vidx1 * #4
+t57 := &vsum_arr + t56
+t62 := vidx1 * #8
+t59 := &varr + t62
+ARG t59
+t58 := CALL func1
+*t57 := t58
+t63 := vidx1 + #1
+vidx1 := t63
+GOTO label6
+LABEL label8 :
+t67 := &varr + #0
+WRITE *t67
+t75 := &varr + #0
+t81 := t75 + #4
+WRITE *t81
+t83 := &varr + #8
+WRITE *t83
+t91 := &varr + #8
+t97 := t91 + #4
+WRITE *t97
+t102 := &vsum_arr + #0
+WRITE *t102
+t107 := &vsum_arr + #4
+WRITE *t107
+RETURN #0

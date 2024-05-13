@@ -1,0 +1,122 @@
+FUNCTION func1 :
+PARAM vp1
+PARAM vp2
+t1 := *vp1 * *vp2
+va1 := t1
+t12 := vp1 + #4
+t14 := vp2 + #4
+t8 := *t12 * *t14
+vb1 := t8
+t17 := vp1 + #4
+WRITE *t17
+t20 := vp2 + #4
+WRITE *t20
+WRITE vb1
+t22 := va1 + vb1
+RETURN t22
+FUNCTION func2 :
+PARAM vp
+vidx := #0
+LABEL label1 :
+IF vidx <= vp GOTO label2
+GOTO label3
+LABEL label2 :
+t28 := vidx * vidx
+vi := t28
+t34 := vidx + #1
+t37 := vidx + #1
+t31 := t34 * t37
+vj := t31
+t41 := #0
+IF vp >= vi GOTO label7
+GOTO label8
+LABEL label7 :
+t41 := #1
+LABEL label8 :
+IF t41 != #0 GOTO label6
+GOTO label5
+LABEL label6 :
+t45 := #0
+IF vp < vj GOTO label9
+GOTO label10
+LABEL label9 :
+t45 := #1
+LABEL label10 :
+IF t45 != #0 GOTO label4
+GOTO label5
+LABEL label4 :
+RETURN vidx
+LABEL label5 :
+t49 := vidx + #1
+vidx := t49
+GOTO label1
+LABEL label3 :
+RETURN #-1
+FUNCTION func3 :
+PARAM vpp1
+PARAM vpp2
+ARG vpp2
+ARG vpp1
+t54 := CALL func1
+vt1 := t54
+ARG vt1
+t57 := CALL func2
+RETURN t57
+FUNCTION main :
+varr_len := #2
+DEC varrS 40
+vidx1 := #0
+vidx2 := #0
+LABEL label11 :
+IF vidx1 < #2 GOTO label12
+GOTO label13
+LABEL label12 :
+vidx2 := #0
+LABEL label14 :
+IF vidx2 < #2 GOTO label15
+GOTO label16
+LABEL label15 :
+t74 := vidx1 * #20
+t71 := &varrS + t74
+t68 := t71 + #4
+t70 := vidx2 * #8
+t67 := t68 + t70
+t77 := vidx1 * vidx2
+t76 := t77 + vidx2
+*t67 := t76
+t88 := vidx1 * #20
+t85 := &varrS + t88
+t82 := t85 + #4
+t84 := vidx2 * #8
+t81 := t82 + t84
+t89 := t81 + #4
+t93 := vidx1 * vidx1
+t91 := t93 * vidx2
+t90 := t91 + vidx2
+*t89 := t90
+t97 := vidx2 + #1
+vidx2 := t97
+GOTO label14
+LABEL label16 :
+t103 := vidx1 * #20
+t100 := &varrS + t103
+t113 := vidx1 * #20
+t110 := &varrS + t113
+t107 := t110 + #4
+t121 := vidx1 * #20
+t118 := &varrS + t121
+t115 := t118 + #4
+t114 := t115 + #8
+ARG t114
+ARG t107
+t105 := CALL func3
+*t100 := t105
+t122 := vidx1 + #1
+vidx1 := t122
+GOTO label11
+LABEL label13 :
+t128 := &varrS + #0
+t133 := &varrS + #20
+t125 := *t128 + *t133
+WRITE t125
+RETURN #0

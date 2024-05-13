@@ -1,0 +1,3 @@
+Error type A at Line 3: Illegal octal number '09'.
+Error type B at Line 3: syntax error, unexpected SEMI
+Error type A at Line 4: Illegal hexadecimal number '0x3G'.

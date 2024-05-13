@@ -1,0 +1,4 @@
+Error type B at Line 5: syntax error, unexpected COMMA
+Error type B at Line 5: Missing "]".
+Error type B at Line 6: syntax error, unexpected ELSE
+Error type B at Line 6: Missing ";".

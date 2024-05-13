@@ -1,0 +1,42 @@
+FUNCTION add :
+PARAM vtemp
+t12 := vtemp + #4
+t2 := *vtemp + *t12
+RETURN t2
+FUNCTION main :
+DEC vop 8
+DEC vr 8
+vi := #0
+vj := #0
+LABEL label1 :
+IF vi < #2 GOTO label2
+GOTO label3
+LABEL label2 :
+LABEL label4 :
+IF vj < #2 GOTO label5
+GOTO label6
+LABEL label5 :
+t21 := vj * #4
+t22 := &vop + t21
+t23 := vi + vj
+*t22 := t23
+t26 := vj + #1
+vj := t26
+GOTO label4
+LABEL label6 :
+t29 := &vr + #0
+t31 := vi * #4
+t35 := t29 + t31
+ARG &vop
+t36 := CALL add
+*t35 := t36
+t39 := &vr + #0
+t41 := vi * #4
+t45 := t39 + t41
+WRITE *t45
+t46 := vi + #1
+vi := t46
+vj := #0
+GOTO label1
+LABEL label3 :
+RETURN #0
